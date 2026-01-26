@@ -155,12 +155,20 @@ function bmiApp() {
             // Generate in-depth insights
             const insights = this.generateInsights(bmi);
 
+            // Calculate weight needed to reach normal BMI
+            const weightCalculations = this.calculateWeightForNormalBMI(bmi, weight, heightInMeters);
+            
+            // Calculate height change needed (theoretical)
+            const heightCalculations = this.calculateHeightForNormalBMI(bmi, weight, heightInMeters);
+
             // Store result
             this.result = {
                 bmi: bmi,
                 category: category,
                 interpretation: interpretation,
-                insights: insights
+                insights: insights,
+                weightCalculations: weightCalculations,
+                heightCalculations: heightCalculations
             };
 
             // Move to result step
@@ -171,6 +179,73 @@ function bmiApp() {
         saveAndSkipToHistory() {
             this.saveResult();
             // saveResult() already moves to step 4 (history), so we don't need to do anything else
+        },
+
+        // Calculate weight needed to reach normal BMI range
+        calculateWeightForNormalBMI(currentBMI, currentWeightKg, heightInMeters) {
+            // Normal BMI range is 18.5 to 24.9
+            // Calculate target weight for both ends of the range
+            const targetWeightMin = 18.5 * (heightInMeters * heightInMeters);
+            const targetWeightMax = 24.9 * (heightInMeters * heightInMeters);
+            
+            let result = {
+                needsChange: false,
+                weightChange: 0,
+                targetWeight: currentWeightKg,
+                targetBMI: currentBMI,
+                direction: '' // 'gain' or 'lose'
+            };
+
+            if (currentBMI < 18.5) {
+                // Underweight - need to gain to reach 18.5
+                result.needsChange = true;
+                result.weightChange = targetWeightMin - currentWeightKg;
+                result.targetWeight = targetWeightMin;
+                result.targetBMI = 18.5;
+                result.direction = 'gain';
+            } else if (currentBMI > 24.9) {
+                // Overweight/Obese - need to lose to reach 24.9
+                result.needsChange = true;
+                result.weightChange = currentWeightKg - targetWeightMax;
+                result.targetWeight = targetWeightMax;
+                result.targetBMI = 24.9;
+                result.direction = 'lose';
+            }
+            // If BMI is already normal (18.5-24.9), no change needed
+
+            return result;
+        },
+
+        // Calculate height change needed to reach normal BMI (theoretical)
+        calculateHeightForNormalBMI(currentBMI, currentWeightKg, currentHeightMeters) {
+            // Normal BMI range is 18.5 to 24.9
+            let result = {
+                needsChange: false,
+                heightChange: 0,
+                targetHeight: currentHeightMeters,
+                targetBMI: currentBMI,
+                direction: '' // 'increase' or 'decrease'
+            };
+
+            if (currentBMI < 18.5) {
+                // Underweight - would need to decrease height (theoretical, not practical)
+                const targetHeight = Math.sqrt(currentWeightKg / 18.5);
+                result.needsChange = true;
+                result.heightChange = currentHeightMeters - targetHeight;
+                result.targetHeight = targetHeight;
+                result.targetBMI = 18.5;
+                result.direction = 'decrease';
+            } else if (currentBMI > 24.9) {
+                // Overweight/Obese - would need to increase height (theoretical, not practical)
+                const targetHeight = Math.sqrt(currentWeightKg / 24.9);
+                result.needsChange = true;
+                result.heightChange = targetHeight - currentHeightMeters;
+                result.targetHeight = targetHeight;
+                result.targetBMI = 24.9;
+                result.direction = 'increase';
+            }
+
+            return result;
         },
 
         // Generate in-depth insights based on BMI, age, and sex
@@ -270,7 +345,9 @@ function bmiApp() {
                 sex: this.formData.sex || null,
                 bmi: this.result.bmi,
                 category: this.result.category,
-                insights: this.result.insights // Store insights with entry
+                insights: this.result.insights, // Store insights with entry
+                weightCalculations: this.result.weightCalculations, // Store weight calculations
+                heightCalculations: this.result.heightCalculations // Store height calculations
             };
 
             // Add to history array
@@ -430,6 +507,69 @@ function bmiApp() {
             return heightCm.toFixed(1) + ' cm';
         },
 
+        // Format weight change needed
+        formatWeightChange(weightChangeKg, direction, weightUnit) {
+            if (!weightChangeKg || weightChangeKg <= 0) return '';
+            
+            let weightChange = weightChangeKg;
+            if (weightUnit === 'lb') {
+                weightChange = weightChangeKg * 2.20462; // Convert to pounds
+            }
+            
+            const formatted = weightChange.toFixed(1);
+            const unit = weightUnit === 'lb' ? 'lb' : 'kg';
+            
+            return `${formatted} ${unit}`;
+        },
+
+        // Format target weight
+        formatTargetWeight(targetWeightKg, weightUnit) {
+            let targetWeight = targetWeightKg;
+            if (weightUnit === 'lb') {
+                targetWeight = targetWeightKg * 2.20462;
+            }
+            const unit = weightUnit === 'lb' ? 'lb' : 'kg';
+            return `${targetWeight.toFixed(1)} ${unit}`;
+        },
+
+        // Format height change needed (theoretical)
+        formatHeightChange(heightChangeCm, direction, heightUnit, heightFormat) {
+            if (!heightChangeCm || Math.abs(heightChangeCm) < 0.1) return '';
+            
+            let displayValue = '';
+            if (heightFormat === 'feet-inches' || heightUnit === 'in') {
+                // Convert to inches
+                const heightChangeInches = Math.abs(heightChangeCm) * 0.393701;
+                const feet = Math.floor(heightChangeInches / 12);
+                const inches = Math.round(heightChangeInches % 12);
+                
+                if (feet > 0) {
+                    displayValue = `${feet}' ${inches}"`;
+                } else {
+                    displayValue = `${inches}"`;
+                }
+            } else {
+                // Display in cm
+                displayValue = `${Math.abs(heightChangeCm).toFixed(1)} cm`;
+            }
+            
+            return displayValue;
+        },
+
+        // Format target height
+        formatTargetHeight(targetHeightMeters, heightUnit, heightFormat) {
+            const targetHeightCm = targetHeightMeters * 100;
+            
+            if (heightFormat === 'feet-inches' || heightUnit === 'in') {
+                const totalInches = targetHeightCm * 0.393701;
+                const feet = Math.floor(totalInches / 12);
+                const inches = Math.round(totalInches % 12);
+                return `${feet}' ${inches}"`;
+            } else {
+                return `${targetHeightCm.toFixed(1)} cm`;
+            }
+        },
+
         // Format height in imperial (feet and inches, or inches only)
         formatHeightImperial() {
             let heightCm;
@@ -462,12 +602,30 @@ function bmiApp() {
         // View in-depth analysis for a specific history entry
         viewEntryAnalysis(entry) {
             this.viewingEntry = entry;
+            
+            // Reconstruct height and weight for calculations
+            let heightCm, weightKg;
+            if (entry.heightFormat === 'feet-inches') {
+                const totalInches = (entry.heightFeet * 12) + entry.heightInches;
+                heightCm = this.convertHeightToMetric(totalInches, 'in');
+            } else {
+                heightCm = this.convertHeightToMetric(entry.height, entry.heightUnit || 'cm');
+            }
+            weightKg = this.convertWeightToMetric(entry.weight, entry.weightUnit || 'kg');
+            const heightInMeters = heightCm / 100;
+            
+            // Recalculate weight and height adjustments
+            const weightCalculations = this.calculateWeightForNormalBMI(entry.bmi, weightKg, heightInMeters);
+            const heightCalculations = this.calculateHeightForNormalBMI(entry.bmi, weightKg, heightInMeters);
+            
             // Reconstruct result object from entry
             this.result = {
                 bmi: entry.bmi,
                 category: entry.category,
                 interpretation: this.getInterpretationForBMI(entry.bmi),
-                insights: entry.insights || this.generateInsightsForEntry(entry)
+                insights: entry.insights || this.generateInsightsForEntry(entry),
+                weightCalculations: weightCalculations,
+                heightCalculations: heightCalculations
             };
             // Reconstruct form data for unit display
             this.formData.weight = entry.weight;
@@ -566,7 +724,9 @@ function bmiApp() {
                 bmi: 0,
                 category: '',
                 interpretation: '',
-                insights: []
+                insights: [],
+                weightCalculations: null,
+                heightCalculations: null
             };
             this.errors = {
                 weight: '',

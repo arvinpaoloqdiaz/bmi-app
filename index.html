@@ -371,6 +371,37 @@
                         <p class="text-left leading-relaxed" style="color: #B0B0B0;" x-text="result.interpretation"></p>
                     </div>
 
+                    <!-- Weight and Height Calculations -->
+                    <div x-show="result.weightCalculations && result.weightCalculations.needsChange" class="rounded-lg p-4 mb-4 text-left" style="background-color: #2A2A3D; border: 1px solid #3C3C4F;">
+                        <h3 class="font-semibold mb-3" style="color: #E6E6E6;">To Reach Normal BMI Range:</h3>
+                        <div class="space-y-3 text-sm">
+                            <!-- Weight Change -->
+                            <div class="rounded-lg p-3" style="background-color: #1E1E2F; border: 1px solid #3C3C4F;">
+                                <p class="font-semibold mb-2" style="color: #E6E6E6;">Weight Adjustment:</p>
+                                <p style="color: #B0B0B0;">
+                                    You need to <span class="font-medium" style="color: #E6E6E6;" x-text="result.weightCalculations.direction === 'gain' ? 'gain' : 'lose'"></span> 
+                                    <span class="font-medium" style="color: #00B8D9;" x-text="formatWeightChange(result.weightCalculations.weightChange, result.weightCalculations.direction, weightUnit)"></span>
+                                </p>
+                                <p class="mt-1 text-xs" style="color: #3C3C4F;">
+                                    Target weight: <span style="color: #B0B0B0;" x-text="formatTargetWeight(result.weightCalculations.targetWeight, weightUnit)"></span> 
+                                    (BMI: <span style="color: #B0B0B0;" x-text="result.weightCalculations.targetBMI.toFixed(1)"></span>)
+                                </p>
+                            </div>
+                            <!-- Height Change (Theoretical) -->
+                            <div x-show="result.heightCalculations && result.heightCalculations.needsChange" class="rounded-lg p-3" style="background-color: #1E1E2F; border: 1px solid #3C3C4F;">
+                                <p class="font-semibold mb-2" style="color: #E6E6E6;">Height Change (Theoretical):</p>
+                                <p style="color: #B0B0B0;">
+                                    Theoretically, you would need to 
+                                    <span class="font-medium" style="color: #E6E6E6;" x-text="result.heightCalculations.direction === 'increase' ? 'increase' : 'decrease'"></span> 
+                                    height by <span class="font-medium" style="color: #00B8D9;" x-text="formatHeightChange(result.heightCalculations.heightChange * 100, result.heightCalculations.direction, heightUnit, heightFormat)"></span>
+                                </p>
+                                <p class="mt-1 text-xs italic" style="color: #FA8072;">
+                                    Note: Height changes are not practical for adults. This is shown for theoretical reference only.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Unit Conversion Display -->
                     <div class="rounded-lg p-4 mb-4 text-left" style="background-color: #2A2A3D; border: 1px solid #3C3C4F;">
                         <h3 class="font-semibold mb-3" style="color: #E6E6E6;">Your Measurements</h3>
@@ -462,6 +493,38 @@
                         <p class="font-semibold mb-2 text-left" style="color: #E6E6E6;">BMI Interpretation:</p>
                         <p class="text-left leading-relaxed" style="color: #B0B0B0;" x-text="result.interpretation"></p>
                     </div>
+
+                    <!-- Weight and Height Calculations for viewed entry -->
+                    <div x-show="result.weightCalculations && result.weightCalculations.needsChange" class="rounded-lg p-4 mb-4 text-left" style="background-color: #2A2A3D; border: 1px solid #3C3C4F;">
+                        <h3 class="font-semibold mb-3" style="color: #E6E6E6;">To Reach Normal BMI Range:</h3>
+                        <div class="space-y-3 text-sm">
+                            <!-- Weight Change -->
+                            <div class="rounded-lg p-3" style="background-color: #1E1E2F; border: 1px solid #3C3C4F;">
+                                <p class="font-semibold mb-2" style="color: #E6E6E6;">Weight Adjustment:</p>
+                                <p style="color: #B0B0B0;">
+                                    You need to <span class="font-medium" style="color: #E6E6E6;" x-text="result.weightCalculations.direction === 'gain' ? 'gain' : 'lose'"></span> 
+                                    <span class="font-medium" style="color: #00B8D9;" x-text="formatWeightChange(result.weightCalculations.weightChange, result.weightCalculations.direction, viewingEntry ? viewingEntry.weightUnit : weightUnit)"></span>
+                                </p>
+                                <p class="mt-1 text-xs" style="color: #3C3C4F;">
+                                    Target weight: <span style="color: #B0B0B0;" x-text="formatTargetWeight(result.weightCalculations.targetWeight, viewingEntry ? viewingEntry.weightUnit : weightUnit)"></span> 
+                                    (BMI: <span style="color: #B0B0B0;" x-text="result.weightCalculations.targetBMI.toFixed(1)"></span>)
+                                </p>
+                            </div>
+                            <!-- Height Change (Theoretical) -->
+                            <div x-show="result.heightCalculations && result.heightCalculations.needsChange" class="rounded-lg p-3" style="background-color: #1E1E2F; border: 1px solid #3C3C4F;">
+                                <p class="font-semibold mb-2" style="color: #E6E6E6;">Height Change (Theoretical):</p>
+                                <p style="color: #B0B0B0;">
+                                    Theoretically, you would need to 
+                                    <span class="font-medium" style="color: #E6E6E6;" x-text="result.heightCalculations.direction === 'increase' ? 'increase' : 'decrease'"></span> 
+                                    height by <span class="font-medium" style="color: #00B8D9;" x-text="formatHeightChange(result.heightCalculations.heightChange * 100, result.heightCalculations.direction, viewingEntry ? (viewingEntry.heightUnit || 'cm') : heightUnit, viewingEntry ? (viewingEntry.heightFormat || 'single') : heightFormat)"></span>
+                                </p>
+                                <p class="mt-1 text-xs italic" style="color: #FA8072;">
+                                    Note: Height changes are not practical for adults. This is shown for theoretical reference only.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Unit Conversion Display for viewed entry -->
                     <div class="rounded-lg p-4 mb-4 text-left" style="background-color: #2A2A3D; border: 1px solid #3C3C4F;">
                         <h3 class="font-semibold mb-3" style="color: #E6E6E6;">Measurements</h3>
